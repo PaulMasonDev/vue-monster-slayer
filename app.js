@@ -11,6 +11,7 @@ const app = Vue.createApp({
       specialAttackCooldown: 0,
       healCooldown: 0,
       gameResults: "",
+      battleLog: [],
     };
   },
   watch: {
@@ -48,12 +49,14 @@ const app = Vue.createApp({
     healDisabled() {
       return this.healCooldown !== 0;
     },
+    actionClass() {},
   },
   methods: {
     attackMonster() {
       const attackValue = getRandomValue(5, 12);
       this.monsterHealth -= attackValue;
       this.monsterHealth < 0 ? (this.monsterHealth = 0) : null;
+      this.addLogMessage("Player", "Attack", attackValue);
       this.attackPlayer();
       this.specialAttackCooldown > 0 ? this.specialAttackCooldown-- : null;
       this.healCooldown > 0 ? this.healCooldown-- : null;
@@ -62,6 +65,7 @@ const app = Vue.createApp({
       const attackValue = getRandomValue(8, 15);
       this.playerHealth -= attackValue;
       this.playerHealth < 0 ? (this.playerHealth = 0) : null;
+      this.addLogMessage("Monster", "Attack", attackValue);
     },
     specialAttackMonster() {
       if (this.specialAttackCooldown === 0) {
@@ -69,6 +73,7 @@ const app = Vue.createApp({
         this.monsterHealth -= attackValue;
         this.monsterHealth < 0 ? (this.monsterHealth = 0) : null;
         this.specialAttackCooldown = 2;
+        this.addLogMessage("Player", "Special Attack", attackValue);
         this.attackPlayer();
       }
     },
@@ -81,15 +86,27 @@ const app = Vue.createApp({
           : (this.playerHealth += healValue);
         this.healCooldown = 2;
         this.attackPlayer();
+        this.addLogMessage("Player", "Heal", healValue);
       }
     },
-    surrender() {},
+    surrender() {
+      this.gameResults = "Surrendered! You lost to the monster";
+    },
     newGame() {
       this.monsterHealth = 100;
       this.playerHealth = 100;
       this.specialAttackCooldown = 0;
       this.healCooldown = 0;
       this.gameResults = "";
+      this.battleLog = [];
+    },
+    addLogMessage(who, what, value) {
+      this.battleLog.unshift({
+        actionBy: who,
+        actionType: what,
+        actionValue: value,
+      });
+      this.battleLog.length > 10 ? this.battleLog.pop() : null;
     },
   },
 }).mount("#game");
